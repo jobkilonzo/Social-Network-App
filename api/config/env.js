@@ -10,5 +10,6 @@ export const {
     DATABASE_PORT,
     DATABASE_USER,
     DATABASE_PASSWORD,
-    DATABASE_NAME
+    DATABASE_NAME,
+    SECRET_KEY
 } = process.env
