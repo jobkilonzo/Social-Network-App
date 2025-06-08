@@ -7,6 +7,11 @@ import { DATABASE_NAME, DATABASE_PASSWORD, DATABASE_PORT, DATABASE_URL, DATABASE
             user: DATABASE_USER,
             password: DATABASE_PASSWORD,
             database: DATABASE_NAME
+            // host: 'localhost',
+            // port: '3306',
+            // user: "root",
+            // password: "123456789",
+            // database: "social"
  });
 
 export default db
