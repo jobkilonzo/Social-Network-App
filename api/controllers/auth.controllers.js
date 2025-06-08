@@ -3,46 +3,52 @@ import db from '../database/db.js'
 import jwt from 'jsonwebtoken';
 import { SECRET_KEY } from '../config/env.js';
 export const register = async (req, res, next) => {
-    try {
-        // Check if user exists
-        const checkQuery = "SELECT * FROM users WHERE username = ?";
-        db.query(checkQuery, [req.body.username], (err, data) => {
-            if (err) return res.status(500).json(err);
-            if (data.length > 0) return res.status(409).json("User already exists");
+    console.log("connect");
 
-            // User does not exist, proceed with registration
-            const salt = bcrypt.genSaltSync(10);
-            const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+    const checkQuery = "SELECT * FROM users WHERE username = ?";
 
-            const insertQuery = "INSERT INTO users (`username`, `email`, `password`, `name`) VALUES (?)";
-            const values = [
-                req.body.username,
-                req.body.email,
-                hashedPassword, // hash the password, not plain one
-                req.body.name
-            ];
+    db.query(checkQuery, [req.body.username], (err, data) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Database error", details: err });
+        }
 
-            db.query(insertQuery, [values], (err, data) => {
-                if (err) return res.status(500).json(err);
-                return res.status(201).json({
-                    success: true,
-                    message: "User has been created",
-                    data: data
-                });
+        if (data.length > 0) {
+            return res.status(409).json({ error: "User already exists" });
+        }
+
+        // User does not exist — create new one
+        const salt = bcrypt.genSaltSync(10);
+        const hashedPassword = bcrypt.hashSync(req.body.password, salt);
+
+        const insertQuery = `
+    INSERT INTO users (username, email, password, name)
+    VALUES (?, ?, ?, ?)
+  `;
+        const values = [
+            req.body.username,
+            req.body.email,
+            hashedPassword,
+            req.body.name,
+        ];
+
+        db.query(insertQuery, values, (err, result) => {
+            if (err) {
+                console.error("Insert error:", err);
+                return res.status(500).json({ error: "Failed to create user", details: err });
+            }
+
+            console.log("User created:", result);
+            return res.status(201).json({
+                success: true,
+                message: "User has been created",
+                userId: result.insertId, // helpful for frontend
             });
         });
-    } catch (error) {
-        return res.status(500).json({ message: "Internal server error", error });
-    }
+    });
+
 };
 export const login = async (req, res, next) => {
-    // try {
-
-    // } catch (error) {
-    //     return res.status(500).json({ message: "Internal server error", error });
-    // }
-    // Check if user exists
-
     const checkQuery = "SELECT * FROM users WHERE username = ?";
     db.query(checkQuery, [req.body.username], (err, data) => {
         console.log("DB query complete");
