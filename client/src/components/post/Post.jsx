@@ -7,13 +7,41 @@ import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { Link } from "react-router-dom";
 import Comments from "../comments/Comments";
 import { useState } from "react";
+import moment from 'moment'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { makeRequest } from "../../axios";
+import { useContext } from "react";
+import { AuthContext } from "../../context/authContext";
+
 
 const Post = ({ post }) => {
   const [commentOpen, setCommentOpen] = useState(false);
+  const { currentUser } = useContext(AuthContext)
+  const { isLoading, error, data } = useQuery({
+    queryKey: ['likes', post.id],
+    queryFn: () =>
+      makeRequest.get("/likes?postId=" + post.id).then((res) => res.data),
+  });
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: (liked) => {
+      if (liked) {
+        return makeRequest.delete("/likes?postId=" + post.id);
+      }
+      return makeRequest.post("/likes", { postId: post.id });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["likes", post.id]);
+    },
+    onError: (error) => {
+      console.error("Error toggling like:", error);
+    }
+  });
 
-  //TEMPORARY
-  const liked = false;
 
+  const handleLike = () => {
+    mutation.mutate(data.includes(currentUser.id))
+  }
   return (
     <div className="post">
       <div className="container">
@@ -27,19 +55,25 @@ const Post = ({ post }) => {
               >
                 <span className="name">{post.name}</span>
               </Link>
-              <span className="date">1 min ago</span>
+              <span className="date">{moment(post.createdAt).fromNow()}</span>
             </div>
           </div>
           <MoreHorizIcon />
         </div>
         <div className="content">
           <p>{post.desc}</p>
-          <img src={post.img} alt="" />
+          <img src={"./upload/" + post.img} alt="" />
         </div>
         <div className="info">
           <div className="item">
-            {liked ? <FavoriteOutlinedIcon /> : <FavoriteBorderOutlinedIcon />}
-            12 Likes
+            {isLoading ? (
+              "Loading..."
+            ) : data.includes(currentUser.id) ? (
+              <FavoriteOutlinedIcon style={{ color: "red" }} onClick={handleLike} />
+            ) : (
+              <FavoriteBorderOutlinedIcon onClick={handleLike} />
+            )}
+            {data?.length || 0} Likes
           </div>
           <div className="item" onClick={() => setCommentOpen(!commentOpen)}>
             <TextsmsOutlinedIcon />
@@ -50,7 +84,7 @@ const Post = ({ post }) => {
             Share
           </div>
         </div>
-        {commentOpen && <Comments />}
+        {commentOpen && <Comments postId={post.id} />}
       </div>
     </div>
   );
