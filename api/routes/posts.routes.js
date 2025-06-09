@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { getPosts } from "../controllers/posts.controllers.js";
+import { addPosts, getPosts } from "../controllers/posts.controllers.js";
 
 const postRoute = Router()
 postRoute.get('/', getPosts)
+postRoute.post('/', addPosts)
 
 export default postRoute

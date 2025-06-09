@@ -78,8 +78,12 @@ export const login = async (req, res, next) => {
 
         const { password, ...others } = user;
         res.cookie("accessToken", token, {
-            httpOnly: true
+            httpOnly: true,
+            secure: false,           // Needed for HTTPS
+            sameSite: "Lax",       // Required for cross-site cookies
+            maxAge: 24 * 60 * 60 * 1000 // 1 day
         }).status(200).json(others);
+
     });
 }
 export const logout = async (req, res, next) => {
