@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getUsers } from "../controllers/users.controllers.js";
+import { getUsers, updateUsers } from "../controllers/users.controllers.js";
 
 
 const usersRoute = Router()
 usersRoute.get('/find/:userId', getUsers)
+usersRoute.put('/', updateUsers)
 
 export default usersRoute

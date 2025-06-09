@@ -1,7 +1,6 @@
 
 import db from '../database/db.js'
 import jwt from 'jsonwebtoken'
-import moment from "moment"
 import { SECRET_KEY } from '../config/env.js';
 export const getLikes = (req, res) => {
 
