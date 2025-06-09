@@ -3,6 +3,6 @@ import { getUsers } from "../controllers/users.controllers.js";
 
 
 const usersRoute = Router()
-usersRoute.get('/', getUsers)
+usersRoute.get('/find/:userId', getUsers)
 
 export default usersRoute

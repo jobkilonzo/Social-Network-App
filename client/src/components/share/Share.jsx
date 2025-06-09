@@ -10,34 +10,43 @@ const Share = () => {
 
   const [file, setFile] = useState(null)
   const [desc, setDesc] = useState("")
-
+  const upload = async () => {
+    try{
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await makeRequest.post("/upload", formData)
+      return res.data
+    }catch(err){
+      console.log(err)
+    }
+  }
   const queryClient = useQueryClient()
-  // const mutation = useMutation((newPost)=>{
-  //   return makeRequest.post("/posts", newPost)
-  // }, {
-  //   onSuccess: ()=>{
-  //     queryClient.invalidateQueries(['[posts'])
-  //   }
-  // })
+ 
   const mutation = useMutation({
     mutationFn: (newPost) => makeRequest.post("/posts", newPost),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries(["posts"]); 
+
     },
+    onError: (error) => {
+      console.error("Error creating post:", error);
+    }
   });
-
-
-  const handleClick = e => {
+  const handleClick = async e => {
     e.preventDefault()
-    mutation.mutate({ desc })
-
+    let imgUrl = ""
+    if(file) imgUrl = await upload()
+    mutation.mutate({desc, img: imgUrl})
+    setDesc("")
+    setFile(null)
   }
   const { currentUser } = useContext(AuthContext)
   return (
     <div className="share">
       <div className="container">
         <div className="top">
-          <img
+         <div className="left">
+           <img
             src={currentUser.profilePic}
             alt=""
           />
@@ -47,7 +56,10 @@ const Share = () => {
             onChange={(e) => setDesc(e.target.value)}
             value={desc}
           />
-
+         </div>
+         <div className="right">
+          {file && <img className="file" alt="" src={URL.createObjectURL(file)}/>}
+         </div>
         </div>
         <hr />
         <div className="bottom">
