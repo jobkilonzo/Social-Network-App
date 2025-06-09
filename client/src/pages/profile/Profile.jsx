@@ -13,9 +13,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { makeRequest } from "../../axios";
 import { useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/authContext";
-import { useContext } from "react";
+import { useContext, useState } from "react";
+import Update from "../../components/update/Update";
 
 const Profile = () => {
+  const [openUpdate, setOpenUpdate] = useState(false)
   const userId = parseInt(useLocation().pathname.split("/")[2])
   const { currentUser } = useContext(AuthContext)
   const { isLoading, error, data } = useQuery({
@@ -23,10 +25,34 @@ const Profile = () => {
   queryFn: () =>
     makeRequest.get(`/users/find/${userId}`).then((res) => res.data),
 });
+const { data: relationshipData } = useQuery({
+  queryKey: ['relationship', userId],
+  queryFn: () =>
+    makeRequest.get(`/relationships?followedUserId=${userId}`).then((res) => res.data),
+  enabled: !!userId, 
+});
 
-const handleFollow = () => {
-  
-}
+const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: (following) => {
+      if (following) {
+        return makeRequest.delete("/relationships?userId=" + userId);
+      }
+      return makeRequest.post("/relationships", { userId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["relationship"]);
+    },
+    onError: (error) => {
+      console.error("Error toggling like:", error);
+    }
+  });
+
+
+  const handleFollow = () => {
+    mutation.mutate(relationshipData.includes(currentUser.id))
+  }
+
 
 if (isLoading) return <p>Loading...</p>;
 if (error) return <p>Error fetching user data</p>;
@@ -35,12 +61,12 @@ if (!data) return <p>No user data found</p>;
     <div className="profile">
       <div className="images">
         <img
-          src={data.coverPic}
+          src={"/upload/" +data.coverPic}
           alt=""
           className="cover"
         />
         <img
-          src={data.profilePic}
+          src={"/upload/" +data.profilePic}
           alt=""
           className="profilePic"
         />
@@ -77,16 +103,19 @@ if (!data) return <p>No user data found</p>;
               </div>
             </div>
             {userId ===currentUser.id?  
-            (<button>Update</button>) :
-            <button onClick={handleFollow}>follow</button>}
+            (<button onClick={()=>setOpenUpdate(true)}>Update</button>) :
+            <button onClick={handleFollow}>
+              {relationshipData.includes(currentUser.id)? "Following":"follow"}
+              </button>}
           </div>
           <div className="right">
             <EmailOutlinedIcon />
             <MoreVertIcon />
           </div>
         </div>
-      <Posts/>
+      <Posts userId={userId}/>
       </div>
+      {openUpdate &&<Update setOpenUpdate={setOpenUpdate} user={data}/>}
     </div>
   );
 };

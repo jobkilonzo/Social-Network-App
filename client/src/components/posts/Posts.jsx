@@ -5,11 +5,11 @@ import {
   useQuery,
 } from '@tanstack/react-query'
 
-const Posts = () => {
+const Posts = ({userId}) => {
   const { isLoading, error, data } = useQuery({
     queryKey: ['posts'],
     queryFn: () =>
-      makeRequest.get("/posts").then((res) => res.data),
+      makeRequest.get("/posts?userId=" + userId).then((res) => res.data),
   });
   return <div className="posts">
     {error ? "Something went wrong" : isLoading ? "Loading" : data.map(post => (

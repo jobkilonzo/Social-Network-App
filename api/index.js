@@ -8,6 +8,7 @@ import { PORT } from "./config/env.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import multer from 'multer'
+import relationshipsRoute from "./routes/relationships.routes.js";
 const app = express();
 
 //middlewares
@@ -42,6 +43,7 @@ app.use("/api/comments", commentsRoute);
 app.use("/api/likes", likesRoute);
 app.use("/api/posts", postRoute);
 app.use("/api/users", usersRoute);
+app.use("/api/relationships", relationshipsRoute);
 
 app.listen(PORT, () => {
   console.log(`API running on http://localhost:${PORT}`);
